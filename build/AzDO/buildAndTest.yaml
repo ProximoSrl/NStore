@@ -64,7 +64,7 @@ steps:
   displayName: 'VsTest - testAssemblies'
   inputs:
     testAssemblyVer2: |
-     **\$(BuildConfiguration)\*test*.dll
+     **\$(BuildConfiguration)\**\*test*.dll
      !**\obj\**
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
