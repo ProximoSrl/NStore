@@ -27,13 +27,20 @@ steps:
     version: 2.2.101
 
 - task: Docker@1
+  displayName: login
+  inputs:
+    containerregistrytype: 'Container Registry'
+    dockerRegistryEndpoint: 'Docker Alkampfer Git'
+    command: login
+
+- task: Docker@1
   displayName: 'Run mongodb on docker instance'
   inputs:
     containerregistrytype: 'Container Registry'
     dockerRegistryEndpoint: 'Docker Alkampfer Git'
     command: 'Run an image'
-    imageName: mongodb
-    containerName: mongodb
+    imageName: mongo
+    containerName: mongo
     ports: '27017:27017'
 
 
