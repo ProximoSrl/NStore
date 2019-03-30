@@ -17,7 +17,7 @@ variables:
   solution: 'src/NStore.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  NSTORE_MONGODB: 'mongodb://localhost'
+  NSTORE_MONGODB: 'mongodb://localhost/nstoretest'
   NSTORE_MSSQL: Server=(localdb)\\MSSQLLocalDB;Database=MyDatabase;Trusted_Connection=True;MultipleActiveResultSets=true
 
 steps:
