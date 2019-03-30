@@ -26,6 +26,16 @@ steps:
   inputs:
     version: 2.2.101
 
+- task: Docker@1
+  displayName: 'Run mongodb on docker instance'
+  inputs:
+    containerregistrytype: 'Container Registry'
+    command: 'Run an image'
+    imageName: mongodb
+    containerName: mongodb
+    ports: '27017:27017'
+
+
 - task: GitVersion@0
   displayName: 'GitVersion '
   inputs:
@@ -61,8 +71,8 @@ steps:
     configuration: '$(BuildConfiguration)'
     clean: true
 
-- powershell: 'choco install mongodb'
-  displayName: 'Install mongodb with chocolatey'
+# - powershell: 'choco install mongodb'
+#   displayName: 'Install mongodb with chocolatey'
 
 - task: VSTest@2
   displayName: 'VsTest - testAssemblies'
