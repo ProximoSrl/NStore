@@ -30,6 +30,7 @@ steps:
   displayName: 'Run mongodb on docker instance'
   inputs:
     containerregistrytype: 'Container Registry'
+    dockerRegistryEndpoint: 'Docker Alkampfer Git'
     command: 'Run an image'
     imageName: mongodb
     containerName: mongodb
