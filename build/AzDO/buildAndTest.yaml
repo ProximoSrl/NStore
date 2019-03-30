@@ -72,7 +72,7 @@ steps:
      !**\obj\**
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
-
+  continueOnError: true
 
 - task: PublishTestResults@1
   displayName: 'Publish Test Results from dotnet'
