@@ -18,6 +18,7 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   NSTORE_MONGODB: 'mongodb://localhost'
+  NSTORE_MSSQL: Server=(localdb)\\MSSQLLocalDB;Database=MyDatabase;Trusted_Connection=True;MultipleActiveResultSets=true
 
 steps:
 - task: DotNetCoreInstaller@0
