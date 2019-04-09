@@ -43,6 +43,8 @@ steps:
     containerName: mongo
     ports: '27017:27017'
 
+- script: 'docker logs mongo'
+  displayName: 'Command Line Script'
 
 - task: GitVersion@0
   displayName: 'GitVersion '
