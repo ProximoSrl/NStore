@@ -44,7 +44,7 @@ steps:
     ports: '27017:27017'
 
 - script: 'docker logs mongo'
-  displayName: 'Command Line Script'
+  displayName: 'Dumps logs for mongo docker container'
 
 - task: GitVersion@0
   displayName: 'GitVersion '
@@ -93,6 +93,12 @@ steps:
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
   continueOnError: true
+
+- script: 'docker ps'
+  displayName: 'verify that docker machins is still running'
+
+- script: 'docker logs mongo'
+  displayName: 'Dumps logs for mongo docker container'
 
 - task: PublishTestResults@1
   displayName: 'Publish Test Results from dotnet'
