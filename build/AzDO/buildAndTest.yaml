@@ -1,6 +1,5 @@
 pool:
   name: 'default'
-  demands:
 
 trigger:
 - master
