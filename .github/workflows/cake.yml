@@ -1,0 +1,40 @@
+name: NStore CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        dotnet: [ '2.2.401'] #, '2.2.301', '3.0.100-preview9-014004' ]
+        os: ['windows-latest'] #['windows-latest', 'ubuntu-latest', 'macOS-latest']
+    name: Build for .NET ${{ matrix.dotnet }}
+    steps:
+      # We want the build to continue not to block at the very first error
+      # continue-on-error: true 
+      
+    - uses: actions/checkout@v1
+    
+    - name: Start Docker for MSSSql
+      run: docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=sqlPw3$secure' -e 'MSSQL_PID=Developer' -p 1433:1433 --name msssql -d mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+      
+    - name: Start Docker for Mongodb
+      run: docker run -d -p 27017:27017 mongo
+      
+    - name: Dump mssql docker logs
+      run: docker logs msssql
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ matrix.dotnet }}
+      
+    - name: Build with cake
+      uses: ecampidoglio/cake-action@master
+      env:
+        NSTORE_MONGODB: mongodb://localhost/nstore
+        NSTORE_MSSQL: Server=localhost;user id=sa;password=sqlPw3$secure
+      with:
+        script-path: build.cake
+        target: ReleaseBuild
