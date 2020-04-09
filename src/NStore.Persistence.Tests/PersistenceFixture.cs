@@ -657,7 +657,7 @@ namespace NStore.Persistence.Tests
 
     public class exceptions_should_be_signaled : BasePersistenceTest
     {
-        private readonly ChunkProcessor _throw = c => throw new TimeoutException();
+        private readonly ChunkProcessor _throw = _ => throw new TimeoutException();
         private readonly LambdaSubscription _subscription;
 
         public exceptions_should_be_signaled()

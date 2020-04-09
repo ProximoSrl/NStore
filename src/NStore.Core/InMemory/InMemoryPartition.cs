@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using NStore.Core.Persistence;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NStore.Core.Persistence;
 
 namespace NStore.Core.InMemory
 {
@@ -121,7 +120,9 @@ namespace NStore.Core.InMemory
             try
             {
                 if (_operations.ContainsKey(chunk.OperationId))
+                {
                     return false;
+                }
 
                 if (_sortedChunks.ContainsKey(chunk.Index))
                 {

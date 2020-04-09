@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using NStore.Core.InMemory;
+﻿using NStore.Core.InMemory;
 using NStore.Core.Persistence;
 using NStore.Core.Processing;
 using NStore.Core.Snapshots;
 using NStore.Core.Streams;
 using NStore.Domain.Experimental;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace NStore.Domain.Tests.ExperimentalTests
@@ -223,15 +222,15 @@ namespace NStore.Domain.Tests.ExperimentalTests
             var favCount = twitter.Query.TweetById(tweetId).Favs;
             var favs = await twitter.Query.FavsOfTweetAsync(tweetId);
             var tl = twitter.Query.TimelineOf("user_1");
-            
+
             Assert.Equal(2, favCount);
-            Assert.Collection(favs, 
-                fav1 => Assert.Equal("user_24", fav1.Item1),    
-                fav2 => Assert.Equal("user_26", fav2.Item1)   
+            Assert.Collection(favs,
+                fav1 => Assert.Equal("user_24", fav1.Item1),
+                fav2 => Assert.Equal("user_26", fav2.Item1)
             );
-            
+
             Assert.Collection(tl,
-                tweet => Assert.Equal("hello twitter!", tweet.Text)    
+                tweet => Assert.Equal("hello twitter!", tweet.Text)
             );
         }
     }

@@ -4,13 +4,27 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\NStore.Persistence.Tests\batch_writes_test.cs" Link="Persistence\InMemoryPersistenceTests\batch_writes_test.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\ConcurrencyTests.cs" Link="Persistence\InMemoryPersistenceTests\ConcurrencyTests.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\DefaultSnapshotStoreTests.cs" Link="Persistence\InMemoryPersistenceTests\DefaultSnapshotStoreTests.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\PersistenceDebugExtensions.cs" Link="Persistence\InMemoryPersistenceTests\PersistenceDebugExtensions.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\PersistenceFixture.cs" Link="Persistence\InMemoryPersistenceTests\PersistenceFixture.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\StreamTests.cs" Link="Persistence\InMemoryPersistenceTests\StreamTests.cs" />
+    <Compile Include="..\NStore.Persistence.Tests\TestLoggerFactory.cs" Link="Persistence\InMemoryPersistenceTests\TestLoggerFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta1-build3642" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NStore.Core\NStore.Core.csproj" />
+    <ProjectReference Include="..\NStore.Tpl\NStore.Tpl.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />

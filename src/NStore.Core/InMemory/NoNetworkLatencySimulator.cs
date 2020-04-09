@@ -4,6 +4,8 @@ namespace NStore.Core.InMemory
 {
     public class NoNetworkLatencySimulator : INetworkSimulator
     {
+        public static INetworkSimulator Instance { get; private set; } = new NoNetworkLatencySimulator();
+
         public Task<long> WaitFast()
         {
             return Task.FromResult(0L);
@@ -13,5 +15,5 @@ namespace NStore.Core.InMemory
         {
             return Task.FromResult(0L);
         }
-    }   
+    }
 }

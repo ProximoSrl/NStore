@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using NStore.Core.Logging;
+using System;
 
 namespace NStore.Persistence.Mongo
 {
     public class MongoPersistenceOptions
     {
-		public INStoreLoggerFactory LoggerFactory { get; set; }
+        public INStoreLoggerFactory LoggerFactory { get; set; }
 
-		public string PartitionsConnectionString { get; set; }
+        public string PartitionsConnectionString { get; set; }
         public string PartitionsCollectionName { get; set; } = "chunks";
 
         /// <summary>

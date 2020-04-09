@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 
 namespace NStore.Core.Streams
 {
+    [Serializable]
     public class ConcurrencyException : Exception
     {
         public ConcurrencyException()

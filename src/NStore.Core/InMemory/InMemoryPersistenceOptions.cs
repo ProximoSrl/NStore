@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 
 namespace NStore.Core.InMemory
 {
@@ -13,7 +12,7 @@ namespace NStore.Core.InMemory
         public InMemoryPersistenceOptions(Func<object, object> cloneFunc, INetworkSimulator networkSimulator)
         {
             CloneFunc = cloneFunc;
-            NetworkSimulator = networkSimulator; 
+            NetworkSimulator = networkSimulator;
         }
 
         public Func<object, object> CloneFunc { get; set; }

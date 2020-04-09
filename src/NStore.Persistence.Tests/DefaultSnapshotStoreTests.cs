@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using NStore.Core.Persistence;
+﻿using NStore.Core.Persistence;
 using NStore.Core.Snapshots;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace NStore.Persistence.Tests
@@ -16,7 +16,7 @@ namespace NStore.Persistence.Tests
         {
         }
     }
-    
+
     public class DefaultSnapshotStoreTests : BasePersistenceTest
     {
         private readonly ISnapshotStore _snapshots;

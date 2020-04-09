@@ -561,7 +561,6 @@ If you see too many of this kind of errors, consider enabling UseLocalSequence.
                         if (err.Message.Contains(PartitionOperationIdx))
                         {
                             queue[err.Index].Failed(WriteJob.WriteResult.DuplicatedOperation);
-                            continue;
                         }
                     }
                 }

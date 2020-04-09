@@ -15,7 +15,7 @@ namespace NStore.Domain.Tests
         {
             public bool Signaled { get; private set; }
 
-            public void On(Signal s)
+            public void On(Signal _)
             {
                 Signaled = true;
             }
@@ -25,7 +25,7 @@ namespace NStore.Domain.Tests
         {
             public bool Signaled { get; private set; }
 
-            private void On(Signal s)
+            private void On(Signal _)
             {
                 Signaled = true;
             }
@@ -48,7 +48,6 @@ namespace NStore.Domain.Tests
 
             Assert.True(state.Signaled);
         }
-
     }
 
     public class AggregateTests
@@ -108,7 +107,6 @@ namespace NStore.Domain.Tests
             Assert.Equal(1, ticket.Version);
             Assert.False(ticket.IsDirty);
         }
-
 
         [Fact]
         public void append_should_increase_version()

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using NStore.Core.Logging;
 using NStore.Core.Persistence;
+using System;
 
 namespace NStore.Persistence.Tests
 {
@@ -26,13 +24,15 @@ namespace NStore.Persistence.Tests
             var level = _level;
 
             if (level == "none")
+            {
                 return NStoreNullLogger.Instance;
+            }
 
-            Func<string, LogLevel, bool> filter = (s, l) => true;
+            Func<string, LogLevel, bool> filter = (_, __) => true;
 
             if (level == "info")
             {
-                filter = (s, l) => l == LogLevel.Information;
+                filter = (_, l) => l == LogLevel.Information;
             }
 
             if ((_logPoller == null || _logPoller == "0" || _logPoller == "none") &&
@@ -48,7 +48,6 @@ namespace NStore.Persistence.Tests
             ));
         }
     }
-
 
     public class ConsoleLoggerWrapper : INStoreLogger
     {
@@ -76,15 +75,13 @@ namespace NStore.Persistence.Tests
         public void LogError(string message, params object[] args)
         {
             _logger.LogError(message, args);
-
         }
-        
+
         public bool IsInformationEnabled => _logger.IsEnabled(LogLevel.Information);
 
         public void LogInformation(string message, params object[] args)
         {
             _logger.LogInformation(message, args);
-
         }
 
         public IDisposable BeginScope<TState>(TState state)

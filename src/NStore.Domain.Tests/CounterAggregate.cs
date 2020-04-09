@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace NStore.Domain.Tests
+﻿namespace NStore.Domain.Tests
 {
     public class CounterAggregateState
     {
         public int Value { get; private set; }
 
-        private void On(CounterIncremented e)
+        private void On(CounterIncremented _)
         {
             Value++;
         }
 
-        private void On(CounterDecremented e)
+        private void On(CounterDecremented _)
         {
             Value--;
         }
@@ -41,8 +37,8 @@ namespace NStore.Domain.Tests
 
         public InvariantsCheckResult CheckInvariants()
         {
-            return State.Value >= 0 ? 
-                InvariantsCheckResult.Ok : 
+            return State.Value >= 0 ?
+                InvariantsCheckResult.Ok :
                 InvariantsCheckResult.Invalid("Counter is negative");
         }
     }

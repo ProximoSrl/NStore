@@ -109,7 +109,7 @@ namespace NStore.Core.Tests.Persistence
         [Fact]
         public async Task peek_partition_should_be_recorded()
         {
-            var value = await _store.ReadSingleBackwardAsync("empty", 1, CancellationToken.None).ConfigureAwait(false);
+            await _store.ReadSingleBackwardAsync("empty", 1, CancellationToken.None).ConfigureAwait(false);
             Assert.Equal(0, _profile.PersistCounter.Calls);
             Assert.Equal(0, _profile.DeleteCounter.Calls);
             Assert.Equal(0, _profile.StoreScanCounter.Calls);
