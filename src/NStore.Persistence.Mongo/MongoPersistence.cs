@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using NStore.Core.Logging;
 using NStore.Core.Persistence;
 using System;
@@ -338,6 +339,18 @@ namespace NStore.Persistence.Mongo
             {
                 // reuse chunk
                 empty = chunk;
+
+                //IMP: to avoid loop we need to check if position is correct or was already taken, there is a rare case of race condition
+                //     with older mongodb version where partition_index is created before _id_ so if you insert an empty that causes conflicts
+                //     both on _id_ and on partition_index you will forever be stuck in a loop because partition_index is the only index that fails
+                //     in error messages.
+
+                //for this reason, if we retry to persist an empty chunk, we need to manually check if position is ok.
+                var positionExists = await PositionExistsAsync(empty.Position).ConfigureAwait(false);
+                if (positionExists)
+                {
+                    await ReloadPositionAndRewriteInChunk(empty, cancellationToken).ConfigureAwait(false);
+                }
                 empty.RewriteIndex(empty.Position);
                 empty.RewriteOperationId("_" + empty.Position);
             }
@@ -375,14 +388,16 @@ namespace NStore.Persistence.Mongo
                     {
                         //Index violation, we do have a chunk that broke an unique index, we need to know if this is 
                         //at partitionId level (concurrency) or at position level (UseLocalSequence == false and multiple process/appdomain are appending to the stream).
-                        if (ex.Message.Contains(PartitionIndexIdx))
+                        var exceptionMessage = GetExceptionMessage(ex, chunk);
+                        
+                        if (exceptionMessage.Contains(PartitionIndexIdx))
                         {
                             await PersistAsEmptyAsync(chunk, cancellationToken).ConfigureAwait(false);
                             _logger.LogInformation($"DuplicateStreamIndexException: {ex.Message}.\n{ex.ToString()}");
                             throw new DuplicateStreamIndexException(chunk.PartitionId, chunk.Index);
                         }
 
-                        if (ex.Message.Contains(PartitionOperationIdx))
+                        if (exceptionMessage.Contains(PartitionOperationIdx))
                         {
                             if (cancellationToken.IsCancellationRequested)
                             {
@@ -394,7 +409,7 @@ namespace NStore.Persistence.Mongo
                             return null;
                         }
 
-                        if (ex.Message.Contains("_id_"))
+                        if (exceptionMessage.Contains("_id_"))
                         {
                             if (cancellationToken.IsCancellationRequested)
                             {
@@ -406,8 +421,7 @@ namespace NStore.Persistence.Mongo
 Operation will be retried. 
 If you see too many of this kind of errors, consider enabling UseLocalSequence.
 {ex.Message} - {ex.GetType().FullName} ");
-                            await ReloadSequence(cancellationToken).ConfigureAwait(false);
-                            chunk.RewritePosition(await GetNextId(1, cancellationToken).ConfigureAwait(false));
+                            await ReloadPositionAndRewriteInChunk(chunk, cancellationToken).ConfigureAwait(false);
                             continue;
                         }
                     }
@@ -416,6 +430,24 @@ If you see too many of this kind of errors, consider enabling UseLocalSequence.
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Get the real exception message from mongo exception, needed for a test and to manipulate
+        /// the message if exception content will change.
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="chunk">Someone can need the chunk to really understand exception message</param>
+        /// <returns></returns>
+        protected virtual string GetExceptionMessage(MongoWriteException ex, TChunk chunk)
+        {
+            return ex.Message;
+        }
+
+        private async Task ReloadPositionAndRewriteInChunk(TChunk chunk, CancellationToken cancellationToken)
+        {
+            await ReloadSequence(cancellationToken).ConfigureAwait(false);
+            chunk.RewritePosition(await GetNextId(1, cancellationToken).ConfigureAwait(false));
         }
 
         public async Task InitAsync(CancellationToken cancellationToken)
@@ -477,6 +509,13 @@ If you see too many of this kind of errors, consider enabling UseLocalSequence.
                 .ConfigureAwait(false);
 
             this._sequence = lastSequenceNumber;
+        }
+
+        private Task<Boolean> PositionExistsAsync(Int64 position)
+        {
+            return _chunks
+                .AsQueryable()
+                .AnyAsync(c => c.Position == position);
         }
 
         private async Task EnsureFirstSequenceRecord()

@@ -1,8 +1,10 @@
+using Fasterflect;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
+using MongoDB.Driver.Linq;
 using NStore.Core.Persistence;
 using NStore.Persistence.Tests;
 using System;
@@ -150,8 +152,6 @@ namespace NStore.Persistence.Mongo.Tests
     public class Can_intercept_mongo_query_with_options : BasePersistenceTest
     {
         private Int32 callCount;
-        private Int32 failedCallCount;
-        private Int32 startCallCount;
 
         protected internal override MongoPersistenceOptions GetMongoPersistenceOptions()
         {
@@ -159,17 +159,9 @@ namespace NStore.Persistence.Mongo.Tests
             options.CustomizePartitionClientSettings = mongoClientSettings =>
                 mongoClientSettings.ClusterConfigurator = clusterConfigurator =>
                 {
-                    clusterConfigurator.Subscribe<CommandStartedEvent>(e =>
-                    {
-                        startCallCount++;
-                    });
                     clusterConfigurator.Subscribe<CommandSucceededEvent>(e =>
                     {
                         callCount++;
-                    });
-                    clusterConfigurator.Subscribe<CommandFailedEvent>(e =>
-                    {
-                        failedCallCount++;
                     });
                 };
             return options;
@@ -184,6 +176,144 @@ namespace NStore.Persistence.Mongo.Tests
             await Store.AppendAsync("test1", -1, "CHUNK1").ConfigureAwait(false);
 
             Assert.Equal(1, callCount);
+        }
+    }
+
+    public class Verify_race_condition_that_caused_memory_leak : BasePersistenceTest
+    {
+        private MongoPersistenceOptions _persistenceOptions;
+
+        protected override IMongoPersistence CreatePersistence(MongoPersistenceOptions options)
+        {
+            _persistenceOptions = options;
+            return new MongoPersistence<CustomChunk>(options);
+        }
+
+        private class TestMongoPersistence : MongoPersistence<CustomChunk>
+        {
+            private Int32 _loop_blocker = 0;
+
+            public TestMongoPersistence(MongoPersistenceOptions options) : base(options)
+            {
+            }
+
+            protected override string GetExceptionMessage(MongoWriteException ex, CustomChunk chunk)
+            {
+                var collection = (IMongoCollection<CustomChunk>)this.GetFieldValue("_chunks");
+                if (_loop_blocker++ > 10)
+                {
+                    throw new Exception("Loop in inserting stuff into database");
+                }
+
+                if (ex.Message.Contains("_id_")) 
+                {
+                    //We need to simulate the fact that the id for partition is primary 
+                    var partitionIndexConflict = collection
+                        .AsQueryable()
+                        .Where(c => c.PartitionId == chunk.PartitionId && c.Index == chunk.Index)
+                        .Any();
+                    if (partitionIndexConflict)
+                    {
+                        return "Error in partition_index";
+                    }
+                }
+                return base.GetExceptionMessage(ex, chunk);
+            }
+        }
+
+        [Fact]
+        public async Task Race_condition_fill_empty()
+        {
+            var persistence1 = new MongoPersistence<CustomChunk>(_persistenceOptions);
+            await persistence1.InitAsync(CancellationToken.None).ConfigureAwait(false);
+
+            var partitionId = Guid.NewGuid().ToString();
+            //Create a stream
+            await persistence1.AppendAsync(partitionId, "Evento1").ConfigureAwait(false);
+
+            //Call internal append to simulate race condition
+            var lastPosition = await persistence1.ReadLastPositionAsync().ConfigureAwait(false);
+
+            var chunk1 = new CustomChunk();
+            chunk1.Init(
+              lastPosition + 1,
+              partitionId,
+              2,
+              "Evento conflittante 1",
+              Guid.NewGuid().ToString()
+            );
+
+            var chunk2 = new CustomChunk();
+            chunk2.Init(
+              lastPosition + 1, //Conflicting
+              partitionId,
+              2, //Conflicting
+              "Evento conflittante 2",
+              Guid.NewGuid().ToString()
+            );
+
+            //This insert the first chunk
+            var task = (Task<IChunk>)persistence1.CallMethod("InternalPersistAsync", new object[] { chunk1, CancellationToken.None });
+            task.Wait();
+
+            //this should not generate loop.
+            task = (Task<IChunk>)persistence1.CallMethod("InternalPersistAsync", new object[] { chunk2, CancellationToken.None });
+            try
+            {
+                task.Wait();
+                throw new Exception("We are expecting an exception");
+            }
+            catch (AggregateException aex)
+            {
+                Assert.IsType<DuplicateStreamIndexException>(aex.InnerException);
+            }
+        }
+
+        [Fact]
+        public async Task Race_condition_with_empty()
+        {
+            var persistence1 = new TestMongoPersistence(_persistenceOptions);
+            await persistence1.InitAsync(CancellationToken.None).ConfigureAwait(false);
+
+            var _chunks = (IMongoCollection<CustomChunk>)persistence1.GetFieldValue("_chunks");
+
+            _chunks.Database.DropCollection(_chunks.CollectionNamespace.CollectionName);
+
+            //Call internal append to simulate race condition
+            var lastPosition = await persistence1.ReadLastPositionAsync().ConfigureAwait(false);
+
+            var chunk1 = new CustomChunk();
+            chunk1.Init(
+                lastPosition + 1,
+                "::empty",
+                lastPosition + 1,
+                null,
+                Guid.NewGuid().ToString()
+            );
+
+            var chunk2 = new CustomChunk();
+            chunk2.Init(
+                lastPosition + 1,
+                "::empty",
+                lastPosition + 1,
+                null,
+                Guid.NewGuid().ToString()
+            );
+
+            //This insert the first chunk
+            var task = (Task<IChunk>)persistence1.CallMethod("InternalPersistAsync", new object[] { chunk1, CancellationToken.None });
+            task.Wait();
+
+            task = (Task<IChunk>)persistence1.CallMethod("InternalPersistAsync", new object[] { chunk2, CancellationToken.None });
+            try
+            {
+                task.Wait();
+                throw new Exception("We are expecting an exception");
+            }
+            catch (AggregateException aex)
+            {
+                Assert.IsType<DuplicateStreamIndexException>(aex.InnerException);
+            }
         }
     }
 

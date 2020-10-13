@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using MongoDB.Driver;
 using NStore.Core.Persistence;
 using NStore.Persistence.Mongo;
-using NStore.Persistence;
 using Xunit;
 #if MAP_DOMAIN
 using MongoDB.Bson.Serialization;
